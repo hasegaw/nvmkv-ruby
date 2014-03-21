@@ -32,13 +32,14 @@ _EXTERN_C_ VALUE wrap_syscall_open(VALUE self, VALUE filename) {
 	return INT2FIX(fd);
 }
 
-_EXTERN_C_ VALUE wrap_kv_open(VALUE self, VALUE id, VALUE version, VALUE max_pools, VALUE expiry) {
+_EXTERN_C_ VALUE wrap_kv_open(VALUE self, VALUE id, VALUE version, VALUE max_pools, VALUE expiry, VALUE cache_size) {
 	Check_Type(id, T_FIXNUM);
 	Check_Type(version, T_FIXNUM);
 	Check_Type(max_pools, T_FIXNUM);
 	Check_Type(expiry, T_FIXNUM);
+	Check_Type(cache_size, T_FIXNUM);
 
-	int r = nvm_kv_open(FIX2INT(id), FIX2INT(version), FIX2INT(max_pools), FIX2INT(expiry));
+	int r = nvm_kv_open(FIX2INT(id), FIX2INT(version), FIX2INT(max_pools), FIX2INT(expiry), NUM2LONG(cache_size));
 	return INT2FIX(r);
 }
 
@@ -232,7 +233,7 @@ _EXTERN_C_ VALUE wrap_kv_next(VALUE self, VALUE kv_id, VALUE iterator_id) {
 }
 
 _EXTERN_C_ VALUE wrap_kv_get_current(VALUE self, VALUE kv_id, VALUE iterator_id) {
-	int value_buf_len = 1024 * 1024;
+	int value_buf_len = NVM_KV_MAX_VALUE_SIZE;
 	char key_buf[NVM_KV_MAX_KEY_SIZE+1];
 	uint32_t key_len = NVM_KV_MAX_KEY_SIZE;
 	char* value_buf;
@@ -255,7 +256,7 @@ _EXTERN_C_ VALUE wrap_kv_get_current(VALUE self, VALUE kv_id, VALUE iterator_id)
 
 	if (actual_length > value_buf_len) {
 		free(value_buf);
-		value_buf_len = (actual_length + 4096) * (~0xFFF);
+		value_buf_len = actual_length;
 		if (posix_memalign((void**)&value_buf, 4096, value_buf_len)) {
 			rb_raise(rb_eNoMemError, "memory allocation failed");
 		}
@@ -451,12 +452,12 @@ _EXTERN_C_ VALUE wrap_kv_get_store_info(VALUE self, VALUE kv_id) {
 		ret = Qnil;
 	} else {
 		ret = rb_hash_new();
-		// TODO: num_keys, free_space = uint64_t
 		rb_hash_aset(ret, rb_str_new2("version"), INT2FIX(si.version));
 		rb_hash_aset(ret, rb_str_new2("num_pools"), INT2FIX(si.num_pools));
 		rb_hash_aset(ret, rb_str_new2("max_pools"), INT2FIX(si.max_pools));
 		rb_hash_aset(ret, rb_str_new2("expiry_mode"), INT2FIX(si.expiry_mode));
 		rb_hash_aset(ret, rb_str_new2("global_expiry"), INT2FIX(si.global_expiry));
+		rb_hash_aset(ret, rb_str_new2("cache_size"), LONG2NUM(si.cache_size));
 		rb_hash_aset(ret, rb_str_new2("num_keys"), LONG2NUM(si.num_keys));
 		rb_hash_aset(ret, rb_str_new2("free_space"), LONG2NUM(si.free_space));
 	}
@@ -506,7 +507,7 @@ _EXTERN_C_ void Init_nvmkv_driver()
 	module = rb_define_module("Nvmkv");
 	rb_define_module_function(module, "file_open", _RB_WRAP_FUNC_(wrap_syscall_open), 1);
 
-	rb_define_module_function(module, "kv_open", _RB_WRAP_FUNC_(wrap_kv_open), 4);
+	rb_define_module_function(module, "kv_open", _RB_WRAP_FUNC_(wrap_kv_open), 5);
 	rb_define_module_function(module, "kv_pool_create", _RB_WRAP_FUNC_(wrap_kv_pool_create), 2);
 	rb_define_module_function(module, "kv_delete_all", _RB_WRAP_FUNC_(wrap_kv_delete_all), 1);
 	rb_define_module_function(module, "kv_close", _RB_WRAP_FUNC_(wrap_kv_close), 1);

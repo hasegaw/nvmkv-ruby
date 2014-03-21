@@ -69,6 +69,7 @@ module NVMKV
       @max_pools = value_hash.fetch('max_pools')
       @expiry_mode = value_hash.fetch('expiry_mode')
       @global_expiry = value_hash.fetch('global_expiry')
+      @cache_size = value_hash.fetch('cache_size')
       @num_keys = value_hash.fetch('num_keys')
       @free_space = value_hash.fetch('free_space')
     end
@@ -254,10 +255,11 @@ module NVMKV
     # path :: path to OpenNVM device. eg) /dev/fioa
     # max_pools :: Maximum pool size in this KV Store (valid only for KV Store initialization)
     # expiry_mode :: Expiry mode (vaild only for KV Store initialization)
-    def open(path, max_pools = Nvmkv::MAX_POOLS, expiry_mode = 0)
+    # cache_size :: The amount of memory (in bytes) used for the collision cache.
+    def open(path, max_pools = Nvmkv::MAX_POOLS, expiry_mode = 0, cache_size = 0)
        @file_fd = Nvmkv::file_open(path);
       kv_version = 0
-      @kv_id = Nvmkv.kv_open(@file_fd, kv_version, max_pools, expiry_mode);
+      @kv_id = Nvmkv.kv_open(@file_fd, kv_version, max_pools, expiry_mode, cache_size);
       @kv_id
     end
  

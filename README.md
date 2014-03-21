@@ -3,15 +3,15 @@
 nvmkv-ruby is binding library for Ruby programming language.
 This library provides the access to NVMKV library in OpenNVM.
 
-nvmkv-ruby requires NVMKV library. nvmkv-ruby-0.1 is tested with NVMKV 0.7
+nvmkv-ruby requires NVMKV library. nvmkv-ruby-0.1 is tested with NVMKV v1.0.0
 which can be obtained from http://opennvm.github.io.
 
 # Installation
 
 Before installing nvmkv-ruby, you should install softwares below.
 
-- ioMemory VSL (for Fusion-io devices)
-- NVMKV library
+- ioMemory VSL 3.3.3 (for Fusion-io devices)
+- NVMKV library v1.0.0
 
 You would want to get Ruby 1.9.3 from Red Hat Software Collections (SCL).
 
